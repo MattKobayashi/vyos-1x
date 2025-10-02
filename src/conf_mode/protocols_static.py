@@ -17,6 +17,7 @@
 from ipaddress import IPv4Network
 from sys import exit
 from sys import argv
+import os
 
 from vyos.config import Config
 from vyos.configverify import has_frr_protocol_in_dict
@@ -31,6 +32,7 @@ from vyos import airbag
 airbag.enable()
 
 config_file = '/etc/iproute2/rt_tables.d/vyos-static.conf'
+DHCP_HOOK_IFLIST = '/tmp/static_dhcp_interfaces'
 
 def get_config(config=None):
     if config:
@@ -91,6 +93,23 @@ def generate(config_dict):
 
     # eqivalent of the C foo ? 'a' : 'b' statement
     static = vrf and config_dict['vrf']['name'][vrf]['protocols']['static'] or config_dict['static']
+
+    # Collect interfaces that have DHCP configuration for DHCP hooks
+    dhcp_interfaces = set()
+
+    # Check for DHCP interfaces in route configurations
+    if 'route' in static:
+        for prefix, prefix_options in static['route'].items():
+            if 'dhcp_interface' in prefix_options:
+                for interface_name in prefix_options['dhcp_interface']:
+                    dhcp_interfaces.add(interface_name)
+
+    # Write the interface list for DHCP hooks or clean up if empty
+    if dhcp_interfaces:
+        with open(DHCP_HOOK_IFLIST, 'w') as f:
+            f.write(" ".join(dhcp_interfaces))
+    elif os.path.exists(DHCP_HOOK_IFLIST):
+        os.unlink(DHCP_HOOK_IFLIST)
 
     # Put routing table names in /etc/iproute2/rt_tables
     render(config_file, 'iproute2/static.conf.j2', static)
