@@ -26,6 +26,7 @@ from vyos.configverify import verify_vrf
 from vyos.frrender import FRRender
 from vyos.frrender import get_frrender_dict
 from vyos.utils.process import is_systemd_service_running
+from vyos.utils.file import write_file
 from vyos.template import render
 from vyos import ConfigError
 from vyos import airbag
@@ -106,8 +107,7 @@ def generate(config_dict):
 
     # Write the interface list for DHCP hooks or clean up if empty
     if dhcp_interfaces:
-        with open(DHCP_HOOK_IFLIST, 'w') as f:
-            f.write(" ".join(dhcp_interfaces))
+        write_file(DHCP_HOOK_IFLIST, " ".join(dhcp_interfaces))
     elif os.path.exists(DHCP_HOOK_IFLIST):
         os.unlink(DHCP_HOOK_IFLIST)
 
