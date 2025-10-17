@@ -45,6 +45,7 @@ kea4_options = {
     'ipv6_only_preferred': 'v6-only-preferred',
     'captive_portal': 'v4-captive-portal',
     'capwap_controller': 'capwap-ac-v4',
+    'interface_mtu': 'interface-mtu',
 }
 
 kea6_options = {
@@ -480,7 +481,7 @@ def kea_add_lease(
     return False
 
 
-def kea_delete_lease(inet, ip_address, vrf_name=''):
+def kea_delete_lease(inet, vrf_name, ip_address):
     args = {'ip-address': ip_address}
 
     result = _ctrl_socket_command(inet, vrf_name, f'lease{inet}-del', args)
